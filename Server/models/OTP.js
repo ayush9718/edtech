@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const mailSender = require("../utils/mailSender");
+const emailTemplate = require("../mail/templates/emailVerificationTemplate");
 
 exprots.otpSchema = new mongoose.Schema({
     email:{
@@ -16,7 +18,27 @@ exprots.otpSchema = new mongoose.Schema({
     }
 
 });
-// otp verification ke liye pre call hoga
+async function sendVerificationEmail(email, otp) {
+	try {
+		const mailResponse = await mailSender(
+			email,
+			"Verification Email",
+			emailTemplate(otp),
+		);
+		console.log("Email sent successfully: ", mailResponse);
+	} catch (error) {
+		console.log("Error occurred while sending email: ", error);
+	}
+}
+    OTPSchema.pre("save", async function (next) {
+        console.log("New document saved to database");
+        
+        if (this.isNew) {
+            await sendVerificationEmail(this.email, this.otp);
+        }
+        next();
+    });
 
 
-module.exprot = mongoose.model("OTP",otpSchema);
+
+module.exports = mongoose.model("OTP",otpSchema);
