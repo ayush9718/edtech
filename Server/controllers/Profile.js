@@ -1,12 +1,11 @@
 const Profile = require("../models/Profile")
 const CourseProgress = require("../models/CourseProgress")
+
 const Course = require("../models/Course")
 const User = require("../models/User")
-
 const { uploadImageToCloudinary } = require("../utils/imageUploader")
 const mongoose = require("mongoose")
 const { convertSecondsToDuration } = require("../utils/secToDuration")
-
 // Method for updating a profile
 exports.updateProfile = async (req, res) => {
   try {
@@ -24,17 +23,19 @@ exports.updateProfile = async (req, res) => {
     const userDetails = await User.findById(id)
     const profile = await Profile.findById(userDetails.additionalDetails)
 
+    const user = await User.findByIdAndUpdate(id, {
+      firstName,
+      lastName,
+    })
+    await user.save()
+
     // Update the profile fields
-    userDetails.firstName = firstName;
-    userDetails.lastName = lastName;
-    
     profile.dateOfBirth = dateOfBirth
     profile.about = about
     profile.contactNumber = contactNumber
     profile.gender = gender
 
     // Save the updated profile
-    await userDetails.save();
     await profile.save()
 
     // Find the updated user details
@@ -52,7 +53,7 @@ exports.updateProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: error.message,
-    });
+    })
   }
 }
 
@@ -67,7 +68,6 @@ exports.deleteAccount = async (req, res) => {
         message: "User not found",
       })
     }
-
     // Delete Assosiated Profile with the User
     await Profile.findByIdAndDelete({
       _id: new mongoose.Types.ObjectId(user.additionalDetails),
@@ -79,7 +79,6 @@ exports.deleteAccount = async (req, res) => {
         { new: true }
       )
     }
-
     // Now Delete User
     await User.findByIdAndDelete({ _id: id })
     res.status(200).json({
@@ -87,8 +86,7 @@ exports.deleteAccount = async (req, res) => {
       message: "User deleted successfully",
     })
     await CourseProgress.deleteMany({ userId: id })
-  } 
-  catch (error) {
+  } catch (error) {
     console.log(error)
     res
       .status(500)
@@ -126,19 +124,18 @@ exports.updateDisplayPicture = async (req, res) => {
       1000,
       1000
     )
-    console.log(image);
+    console.log(image)
     const updatedProfile = await User.findByIdAndUpdate(
       { _id: userId },
       { image: image.secure_url },
       { new: true }
     )
-    return res.send({
+    res.send({
       success: true,
       message: `Image Updated successfully`,
       data: updatedProfile,
     })
-  } 
-  catch (error) {
+  } catch (error) {
     return res.status(500).json({
       success: false,
       message: error.message,

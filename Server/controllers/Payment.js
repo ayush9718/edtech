@@ -15,13 +15,16 @@ exports.capturePayment = async (req, res) => {
   const { courses } = req.body
   const userId = req.user.id
   if (courses.length === 0) {
-    return res.json({ success: false, message: "Please Provide Course ID" })
+    return res.json({ 
+      success: false, 
+      message: "Please Provide Course ID" 
+    })
   }
 
   let total_amount = 0
 
   for (const course_id of courses) {
-    let course
+    let course;
     try {
       // Find the course by its ID
       course = await Course.findById(course_id)
@@ -71,6 +74,7 @@ exports.capturePayment = async (req, res) => {
   }
 }
 
+
 // verify the payment
 exports.verifyPayment = async (req, res) => {
   const razorpay_order_id = req.body?.razorpay_order_id
@@ -81,28 +85,29 @@ exports.verifyPayment = async (req, res) => {
   const userId = req.user.id
 
   if (
-    !razorpay_order_id ||
-    !razorpay_payment_id ||
-    !razorpay_signature ||
-    !courses ||
-    !userId
+    !razorpay_order_id || !razorpay_payment_id || 
+    !razorpay_signature || !courses || !userId
   ) {
     return res.status(200).json({ success: false, message: "Payment Failed" })
   }
 
-  let body = razorpay_order_id + "|" + razorpay_payment_id
+  let body = razorpay_order_id + "|" + razorpay_payment_id;
 
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_SECRET)
-    .update(body.toString())
-    .digest("hex")
+  const expectedSignature = crypto.createHmac("sha256", process.env.RAZORPAY_SECRET)
+                                  .update(JSON.toString(body)).digest("hex");
 
   if (expectedSignature === razorpay_signature) {
     await enrollStudents(courses, userId, res)
-    return res.status(200).json({ success: true, message: "Payment Verified" })
+    return res.status(200).json({ 
+      success: true, 
+      message: "Payment Verified" 
+    })
   }
 
-  return res.status(200).json({ success: false, message: "Payment Failed" })
+  return res.status(200).json({
+    success: false,
+    message: "Payment Failed"
+   })
 }
 
 // Send Payment Success Email
@@ -143,7 +148,9 @@ const enrollStudents = async (courses, userId, res) => {
   if (!courses || !userId) {
     return res
       .status(400)
-      .json({ success: false, message: "Please Provide Course ID and User ID" })
+      .json({   
+      success: false,
+      message: "Please Provide Course ID and User ID" })
   }
 
   for (const courseId of courses) {
@@ -167,6 +174,7 @@ const enrollStudents = async (courses, userId, res) => {
         userId: userId,
         completedVideos: [],
       })
+      
       // Find the student and add the course to their list of enrolled courses
       const enrolledStudent = await User.findByIdAndUpdate(
         userId,
@@ -179,7 +187,8 @@ const enrollStudents = async (courses, userId, res) => {
         { new: true }
       )
 
-      console.log("Enrolled student: ", enrolledStudent)
+      console.log("Enrolled student: ", enrolledStudent);
+
       // Send an email notification to the enrolled student
       const emailResponse = await mailSender(
         enrolledStudent.email,
@@ -191,9 +200,13 @@ const enrollStudents = async (courses, userId, res) => {
       )
 
       console.log("Email sent successfully: ", emailResponse.response)
-    } catch (error) {
+    } 
+    catch (error) {
       console.log(error)
-      return res.status(400).json({ success: false, error: error.message })
+      return res.status(400).json({
+        success: false, 
+        error: error.message 
+      })
     }
   }
 }
