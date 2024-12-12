@@ -17,7 +17,7 @@ const mailSender = async (email, title, body) => {
                 from: `"Study Notion" <${process.env.MAIL_USER}>`,
                 to:`${email}`,
                 subject: `${title}`,
-                html: `${body}`,
+                html: body,
             })
             console.log(info);
             return info;
@@ -27,6 +27,4 @@ const mailSender = async (email, title, body) => {
         return error;
     }
 }
-
-
 module.exports = mailSender;

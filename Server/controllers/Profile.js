@@ -6,6 +6,8 @@ const User = require("../models/User")
 const { uploadImageToCloudinary } = require("../utils/imageUploader")
 const mongoose = require("mongoose")
 const { convertSecondsToDuration } = require("../utils/secToDuration")
+
+
 // Method for updating a profile
 exports.updateProfile = async (req, res) => {
   try {
@@ -79,16 +81,18 @@ exports.deleteAccount = async (req, res) => {
         { new: true }
       )
     }
+    await CourseProgress.deleteMany({ userId: id });
     // Now Delete User
     await User.findByIdAndDelete({ _id: id })
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "User deleted successfully",
     })
-    await CourseProgress.deleteMany({ userId: id })
-  } catch (error) {
+
+  } 
+  catch (error) {
     console.log(error)
-    res
+    return res
       .status(500)
       .json({ success: false, message: "User Cannot be deleted successfully" })
   }

@@ -2,14 +2,14 @@ const User = require("../models/User");
 const OTP = require("../models/OTP");
 const otpGenerator = require("otp-generator");
 const bcrypt = require("bcrypt");
-const mailSender =require("../utility/mailSender");
-const {passwordUpdated} = require("../mail/template/passwordUpdated"); //templates
+const mailSender =require("../utils/mailSender");
+const {passwordUpdated} = require("../mail/templates/passwordUpdated"); //templates
 const jwt = require("jsonwebtoken");
 const Profile = require("../models/Profile");
 require("dotenv").config();
 //send otp
 
-exprots.SendOtp=async (req,res)=>{
+exports.SendOtp=async (req,res)=>{
     try{
         const {email}= req.body;
         const isexist = await User.findOne({email});
@@ -20,30 +20,27 @@ exprots.SendOtp=async (req,res)=>{
                 message:"already a registed memeber"
             });
         }
-        var newotp = otpGenerator.generate(6,{
-            upperCaseAlphabets:true,
-            lowerCaseAlphabets:false,
-            specialChars:false,
-            digits:true,
-        })
-
-        let checkotp = await OTP.findOne({newotp});
-        while(checkotp){
-            newotp = otpGenerator.generate(6,{
-                upperCaseAlphabets:true,
-                lowerCaseAlphabets:false,
-                specialChars:false,
-                digits:true,
-            });
-            checkotp = await OTP.findOne({newotp});
-        }
-        const otpPayload = {email,newotp};
+        var otp = otpGenerator.generate(6, {
+			upperCaseAlphabets: false,
+			lowerCaseAlphabets: false,
+			specialChars: false,
+		  })
+		  const result = await OTP.findOne({ otp: otp })
+		  console.log("Result is Generate OTP Func")
+		  console.log("OTP", otp)
+		  console.log("Result", result)
+		  while (result) {
+			otp = otpGenerator.generate(6, {
+			  upperCaseAlphabets: false,
+			})
+		  }
+        const otpPayload = {email,otp};
 
         const otpBody = await OTP.create(otpPayload);
-        res.status(200).json({
+        return res.status(200).json({
             success:true,
             message:"otp is sent successfully",
-            otpbody,
+            otpBody,
         })
     }
     catch(error){
@@ -60,9 +57,14 @@ exprots.SendOtp=async (req,res)=>{
 exports.signUp = async (req,res)=>{
 
     try{
-        const{fisrstName,lastName,email, password , confirmPassword,accountType, otp, contactNumber}=req.body;
+        const{firstName,lastName,email, password , confirmPassword,accountType, otp, contactNumber}=req.body;
 
-        if( !fisrstName || !lastName || !email || !password || !confirmPassword || !accountType || !otp || !contactNumber){
+        if(  !firstName ||
+			!lastName ||
+			!email ||
+			!password ||
+			!confirmPassword ||
+			!otp){
             return res.status(403).json({
                 success:false,
                 messgae:"All fileds are required",
@@ -156,7 +158,7 @@ exports.login = async (req, res) => {
 			});
 		}
 
-		if (await bcrypt.compare(password, user.password)) {
+		if ( await bcrypt.compare(password, user.password)) {
 			const token = jwt.sign(
 				{ email: user.email, id: user._id, accountType: user.accountType },
 				process.env.JWT_SECRET,
@@ -172,7 +174,7 @@ exports.login = async (req, res) => {
 				expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
 				httpOnly: true,
 			};
-			res.cookie("token", token, options).status(200).json({
+			return res.cookie("token", token, options).status(200).json({
 				success: true,
 				token,
 				user,

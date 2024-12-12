@@ -1,15 +1,14 @@
 const mongoose = require("mongoose");
 const mailSender = require("../utils/mailSender");
-const emailTemplate = require("../mail/templates/emailVerificationTemplate");
+const {otpTemplate} = require("../mail/templates/emailVerificationTemplate");
 
-exprots.otpSchema = new mongoose.Schema({
+const otpSchema = new mongoose.Schema({
     email:{
         type:String,
         required: true,
     },
     otp:{
         type:String,
-        required:true,
     },
     createdAt:{
         type:Date,
@@ -20,17 +19,18 @@ exprots.otpSchema = new mongoose.Schema({
 });
 async function sendVerificationEmail(email, otp) {
 	try {
+        const otpbody = otpTemplate(otp);
 		const mailResponse = await mailSender(
 			email,
 			"Verification Email",
-			emailTemplate(otp),
+			otpbody,
 		);
 		console.log("Email sent successfully: ", mailResponse);
 	} catch (error) {
 		console.log("Error occurred while sending email: ", error);
 	}
 }
-    OTPSchema.pre("save", async function (next) {
+    otpSchema.pre("save", async function (next) {
         console.log("New document saved to database");
         
         if (this.isNew) {

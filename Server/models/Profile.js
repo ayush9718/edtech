@@ -1,7 +1,7 @@
 const { type } = require("@testing-library/user-event/dist/type");
 const mongoose = require("mongoose");
 
-exprots.profileSchema= new mongoose.Schema({
+const profileSchema= new mongoose.Schema({
     gender:{
         type:String,
     },
